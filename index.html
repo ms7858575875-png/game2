@@ -106,15 +106,22 @@ button:hover { transform: scale(1.05); }
 
 <script>
 const QUESTIONS = [
+  // 3 أحاديث
   {q:'من قال: "لا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه"؟',opts:['النبي ﷺ','أبو بكر','عمر','عثمان'],a:0,type:'choice'},
   {q:'ما هو الحديث الذي يبدأ بـ "من لا يشكر الناس لا يشكر الله"؟',opts:['حديث نبوي','حديث صحابي','حديث تابعي','حديث ضعيف'],a:0,type:'choice'},
   {q:'أي الحديث عن فضل الصدقة؟',opts:['من تصدق...','من صام رمضان...','من قرأ القرآن...','من سمع العلم...'],a:0,type:'choice'},
+
+  // 3 علم نفس
   {q:'ما هي قاعدة التأثير النفسي التي تقول "نحن نميل إلى تذكر الأشياء السهلة"؟',opts:['التحيز المعرفي','الذاكرة الانتقائية','الانطباع الأول','التمثيل الذهني'],a:1,type:'choice'},
   {q:'ما هو الشعور الناتج عن مقارنة نفسك بالآخرين؟',opts:['الغيرة','الرضا','الحب','الخوف'],a:0,type:'choice'},
   {q:'أي من هذه الطرق تساعد على تقليل التوتر النفسي؟',opts:['التنفس العميق','الجلوس بدون هدف','تجاهل المشاعر','التفكير السلبي'],a:0,type:'choice'},
+
+  // 3 عن البشرة/العناية
   {q:'ما هي أهم خطوة للعناية بالبشرة يوميًا؟',opts:['تنظيف البشرة','وضع المكياج','عدم النوم','الحمية فقط'],a:0,type:'choice'},
   {q:'أي عنصر يساعد على إشراق البشرة؟',opts:['فيتامين C','الدهون المشبعة','السكريات','الكافيين'],a:0,type:'choice'},
   {q:'ما أفضل وقت لوضع واقي الشمس؟',opts:['قبل التعرض للشمس','بعد التعرض للشمس','وقت النوم','بعد الاستحمام مباشرة'],a:0,type:'choice'},
+
+  // السؤال النصي الأخير
   {q:'ما هو الشيء الذي يجعل وجهك يشع بالنور؟',answer:['نقاء القلب','حب الله','ذكر الله','حب مخلوقاته','الصلاة'],type:'text'}
 ];
 
@@ -145,25 +152,22 @@ function saveNameCode(name,code){localStorage.setItem('nn_name',name); localStor
 
 document.addEventListener('keydown',function(e){if(e.key==="PrintScreen"){e.preventDefault(); alert("لا يمكنك أخذ سكرين للعبة!");}});
 
-// عرض بطاقة مخالفة
-function showViolation(name,msg="نعتذر، لا يمكنك الدخول للعبة لأنك خالفت قواعد اللعبة ❌"){
-  violationMessage.textContent=`${msg} ${name || ''}`;
+function showViolation(name){
+  violationMessage.textContent=`نعتذر ${name}، لا يمكنك الدخول للعبة لأنك خالفت قواعد اللعبة ❌`;
   violationCard.classList.remove('hidden');
-  welcomeCard.classList.add('hidden');
-  quizCard.classList.add('hidden');
-  resultCard.classList.add('hidden');
 }
 
-// بدء الاختبار
 startBtn.onclick=()=>{
   const name=nameInput.value.trim();
   const code=codeInput.value.trim();
   if(!name){alert('يجب إدخال الاسم.'); return;}
   if(code!=='نعومة4'){alert('الرمز غير صحيح ❌'); return;}
   if(hasAttempt(code)){showViolation(name); return;}
+
   welcomeMessage.style.display="block";
   welcomeMessage.textContent=`🌷 أهلاً بكِ ${name}! سررنا بانضمامك إلى عائلة نعومة نعومتك 💖`;
   saveNameCode(name,code);
+
   setTimeout(()=>{beginQuiz(name,code);},2000);
 };
 
@@ -218,12 +222,14 @@ function finishTest(name,code){
       const val=document.getElementsByName('q'+i)[0].value.trim();
       let matches=0;
       q.answer.forEach(ans=>{ if(val.includes(ans)) matches++; });
-      if(matches===q.answer.length) score+=10; // يجب كتابة الخمسة
+      if(matches===q.answer.length) score+=10;
     }
   });
 
   quizCard.classList.add('hidden'); resultCard.classList.remove('hidden');
+
   resultSummary.innerHTML=`<strong>${name}</strong><br>حصلت على <strong>${score} من ${QUESTIONS.length*10}</strong> نقطة.<br>💖 مبارك لك على إتمام الاختبار!`;
+
   saveAttempt(code,{name,score,date:new Date().toISOString()});
 }
 
@@ -235,20 +241,15 @@ copyBtn.onclick=async()=>{
 closeBtn.onclick = () => { window.location.href='https://www.facebook.com/profile.php?id=61581366775114'; };
 violationClose.onclick=()=>{ window.location.href='https://www.facebook.com/profile.php?id=61581366775114'; };
 
-// منع إعادة التحميل أو الرجوع للغش
-window.addEventListener('beforeunload', (e)=>{
-  e.preventDefault();
-  e.returnValue = '';
-  showViolation(localStorage.getItem('nn_name'),"تم الكشف عن محاولة غش أو إعادة تحميل الصفحة ❌");
-});
-
-// عند تحميل الصفحة، فحص الدخول المكرر
 window.addEventListener('load',()=>{
   const storedName=localStorage.getItem('nn_name');
   const storedCode=localStorage.getItem('nn_code');
   const attempts=loadAttempts();
   if(storedName && storedCode && attempts[storedCode]){
-    showViolation(storedName,"تم الكشف عن محاولة غش أو دخول مكرر ❌");
+    welcomeCard.classList.add('hidden');
+    quizCard.classList.add('hidden');
+    resultCard.classList.add('hidden');
+    showViolation(storedName);
   }
 });
 
